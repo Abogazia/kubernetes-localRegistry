@@ -1,0 +1,98 @@
+---
+#- name: Create /opt/certs
+#  file:
+#    path: /opt/certs
+#    state: directory
+#    owner: "{{ owner }}"
+#    group: "{{ group }}"
+#    mode: u+rwx,g+rwx,o+rwx
+
+
+#- name: Create  /opt/registry
+#  file:
+#    path: /opt/registry
+#    state: directory
+#    owner: "{{ owner }}"
+#    group: "{{ group }}"
+#    mode: u+rwx,g+rwx,o+rwx
+
+
+#- name: Stop service ufw, if started
+#  ansible.builtin.service:
+#    name: ufw
+#    state: stopped    
+
+
+
+#- name: add to daemon.json
+#  template:
+#       src: "daemon.json.j2"
+#       dest: "/etc/docker/daemon.json.j2"
+
+#- name: add to registries.yaml
+#  template:
+#       src: "registries.yaml.j2"
+#       dest: "/etc/rancher/k3s/registries.yaml"       
+
+
+- name: install nfs
+  ansible.builtin.apt:
+    name:
+      - nfs-common
+      - nfs-kernel-server
+    state: present
+     
+- name: check mountpoint exist certs
+  ansible.builtin.file:
+        path: "{{ mountpoint1 }}"
+        state: directory
+        mode: "{{ permission }}"
+        owner: "{{ owner }}"
+        group: "{{ group }}"
+
+
+- name: mount network share certs
+  ansible.posix.mount:
+    src: "{{ mynfs1 }}"
+    path: "{{ mountpoint1 }}"
+    fstype: nfs
+    opts: "{{ myopts }}"
+    state: mounted
+
+
+- name: check mountpoint exist regeistry
+  ansible.builtin.file:
+        path: "{{ mountpoint2 }}"
+        state: directory
+        mode: "{{ permission }}"
+        owner: "{{ owner }}"
+        group: "{{ group }}"
+
+
+
+- name: mount network share regeistry
+  ansible.posix.mount:
+    src: "{{ mynfs2 }}"
+    path: "{{ mountpoint2 }}"
+    fstype: nfs
+    opts: "{{ myopts }}"
+    state: mounted 
+
+
+- name: check mountpoint exist storage
+  ansible.builtin.file:
+        path: "{{ mountpoint_storage }}"
+        state: directory
+        mode: "{{ permission }}"
+        owner: "{{ owner }}"
+        group: "{{ group }}"       
+
+
+- name: mount network share
+  ansible.posix.mount:
+    src: "{{ mynfs_storge }}"
+    path: "{{ mountpoint_storage }}"
+    fstype: nfs
+    opts: "{{ myopts }}"
+    state: mounted 
+

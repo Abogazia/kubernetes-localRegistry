@@ -1,0 +1,8 @@
+---
+- name: Create Deployment
+  shell: 'kubectl create -f /docker-repo/private-registry.yaml'
+  when: ansible_host == hostvars[groups['master'][0]]['ansible_host'] | default(groups['master'][0])
+
+- name: Create Service
+  shell: 'kubectl create -f /docker-repo/private-registry-svc.yaml'
+  when: ansible_host == hostvars[groups['master'][0]]['ansible_host'] | default(groups['master'][0])

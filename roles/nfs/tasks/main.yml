@@ -1,0 +1,67 @@
+---  
+- name: nfs setup
+  apt:
+    name:
+      - nfs-common
+      - nfs-kernel-server
+    state: present
+
+- name: Stop service ufw, if started
+  ansible.builtin.service:
+    name: ufw
+    state: stopped    
+     
+
+- name: Create /opt/certs
+  file:
+    path: /opt/certs
+    state: directory
+    owner: "{{ owner }}"
+    group: "{{ group }}"
+    mode: u+rwx,g+rwx,o+rwx
+
+
+
+- name: Create  /opt/registry
+  file:
+    path: /opt/registry
+    state: directory
+    owner: "{{owner}}"
+    group: "{{ group }}"
+    mode: u+rwx,g+rwx,o+rwx    
+
+- name: nfs storage
+  file: 
+    path: /storage
+    state: directory
+    owner: nobody
+    group: nogroup
+    mode: u+rwx,g+rwx,o+rwx     
+
+- name: edite exports file
+  template: 
+       src: "exports.j2"
+       dest: "/etc/exports"
+
+- name: export file exports
+  shell: "exportfs -a"
+
+
+- name: restart nfs server
+  service:
+    name: nfs-kernel-server
+    state: restarted
+
+- name: Stop service ufw, if started
+  ansible.builtin.service:
+    name: ufw
+    state: stopped
+
+#- name: allow nfs through firewall
+#  ansible.posix.firewalld: 
+#        port: nfs
+#        service: nfs-kernel-server
+#        source: 192.168.122.0/24
+#        zone: public 
+#        state: enabled
+#        permanent: yes

@@ -1,0 +1,8 @@
+---
+- name: Add mappings to /etc/hosts
+  ansible.builtin.blockinfile:
+    path: /etc/hosts
+    block: |
+      {{ master_ip }} {{ server_hostname }}
+    marker: "# {mark} ANSIBLE MANAGED BLOCK {{ server_hostname }}"
+

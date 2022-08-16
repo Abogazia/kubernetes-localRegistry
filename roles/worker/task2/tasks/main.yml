@@ -1,0 +1,14 @@
+---
+- name: change permission key file
+  file:
+    path: /opt/certs/{{ server_hostname }}.key
+    owner: "{{ owner }}"
+    group: "{{ group }}"
+    mode: u+rwx,g+rwx,o+rwx    
+
+
+- name: cp -r /opt/certs/ca.crt  /usr/local/share/ca-certificates
+  command: cp -r /opt/certs/{{ server_hostname }}.crt  /usr/local/share/ca-certificates    
+
+- name: update-ca-certificates
+  shell: "update-ca-certificates"  

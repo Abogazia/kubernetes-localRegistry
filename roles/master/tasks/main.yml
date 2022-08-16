@@ -1,0 +1,144 @@
+---
+- name: Create /docker-repo
+  file:
+    path: /docker-repo
+    state: directory
+
+    
+
+#- name: setup k3s
+#  shell: "curl -sfL https://get.k3s.io | sh -"
+
+- name: setup docker.io
+  apt:
+    name: docker.io
+    state: present
+
+- name: add to daemon.json
+  template:
+      src: "daemon.json.j2"
+      dest: "/etc/docker/daemon.json"
+
+- name: install nfs
+  ansible.builtin.apt:
+    name:
+      - nfs-common
+      - nfs-kernel-server
+    state: present      
+  when: ansible_host != hostvars[groups['nfs'][0]]['ansible_host'] | default(groups['nfs'][0])
+
+- name: check mountpoint exist certs
+  ansible.builtin.file:
+        path: "{{ mountpoint1 }}"
+        state: directory
+        mode: "{{ permission }}"
+        owner: "{{ owner }}"
+        group: "{{ group }}"
+  when: ansible_host != hostvars[groups['nfs'][0]]['ansible_host'] | default(groups['nfs'][0])      
+
+
+- name: mount network share certs
+  ansible.posix.mount:
+    src: "{{ mynfs1 }}"
+    path: "{{ mountpoint1 }}"
+    fstype: nfs
+    opts: "{{ myopts }}"
+    state: mounted
+  when: ansible_host != hostvars[groups['nfs'][0]]['ansible_host'] | default(groups['nfs'][0])
+
+
+- name: check mountpoint exist regeistry
+  ansible.builtin.file:
+        path: "{{ mountpoint2 }}"
+        state: directory
+        mode: "{{ permission }}"
+        owner: "{{ owner }}"
+        group: "{{ group }}"
+  when: ansible_host != hostvars[groups['nfs'][0]]['ansible_host'] | default(groups['nfs'][0])
+
+
+- name: mount network share regeistry
+  ansible.posix.mount:
+    src: "{{ mynfs2 }}"
+    path: "{{ mountpoint2 }}"
+    fstype: nfs
+    opts: "{{ myopts }}"
+    state: mounted 
+  when: ansible_host != hostvars[groups['nfs'][0]]['ansible_host'] | default(groups['nfs'][0])  
+
+
+- name: check mountpoint exist storage
+  ansible.builtin.file:
+        path: "{{ mountpoint_storage }}"
+        state: directory
+        mode: "{{ permission }}"
+        owner: "{{ owner }}"
+        group: "{{ group }}"   
+  when: ansible_host != hostvars[groups['nfs'][0]]['ansible_host'] | default(groups['nfs'][0])          
+
+
+- name: mount network share
+  ansible.posix.mount:
+    src: "{{ mynfs_storge }}"
+    path: "{{ mountpoint_storage }}"
+    fstype: nfs
+    opts: "{{ myopts }}"
+    state: mounted
+  when: ansible_host != hostvars[groups['nfs'][0]]['ansible_host'] | default(groups['nfs'][0])         
+           
+
+- name: Create self-signed certificates
+  shell: 'openssl req \
+        -newkey rsa:4096 -nodes -sha256 -keyout /opt/certs/{{ server_hostname }}.key \
+        -addext "subjectAltName = DNS:{{ server_hostname }}" \
+        -x509 -days 365 -out /opt/certs/{{ server_hostname }}.crt -subj \
+        /C={{ country_name }}/ST={{ city_name }}\ /L={{ city_name }}\ \ /O={{ organization_name }}/OU=IT/CN={{ server_hostname }}'    
+  when: ansible_host ==  hostvars[groups['nfs'][0]]['ansible_host'] | default(groups['nfs'][0])
+
+- name: change permission key file
+  file:
+    path: /opt/certs/{{ server_hostname }}.key
+    owner: "{{ owner }}"
+    group: "{{ group }}"
+    mode: u+rwx,g+rwx,o+rwx
+
+
+
+- name: add to registries.yaml
+  template:
+       src: "registries.yaml.j2"
+       dest: "/etc/rancher/k3s/registries.yaml"
+
+
+- name: cp -r /opt/certs/ca.crt  /usr/local/share/ca-certificates
+  command: cp -r /opt/certs/{{ server_hostname }}.crt  /usr/local/share/ca-certificates
+      
+- name: update-ca-certificates
+  shell: "update-ca-certificates"
+
+- name: restart k3s
+  service: 
+      name: k3s
+      state: restarted
+
+- name: restart docker
+  service: 
+      name: docker
+      state: restarted      
+
+      
+- name: Create a Deployment file private-registry.yaml
+  template:
+       src: "private-registry.yaml.j2"
+       dest: "/docker-repo/private-registry.yaml"
+    
+- name: Create a Service file private-registry-svc.yaml
+  template:
+      src: "private-registry-svc.yaml.j2"
+      dest: "/docker-repo/private-registry-svc.yaml"
+
+
+
+
+
+      

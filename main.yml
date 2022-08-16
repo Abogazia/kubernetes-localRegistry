@@ -1,0 +1,38 @@
+---
+- name: create local regeistry 
+  hosts: nfs
+  gather_facts: yes
+  become: yes
+  roles:
+    - role: nfs
+
+- hosts: all
+  gather_facts: yes
+  become: yes 
+  roles: 
+    - role: allhosts    
+
+- hosts: worker
+  become: yes 
+  roles: 
+    - role: worker    
+
+- hosts: master
+  become: yes
+  roles: 
+    - role: master    
+
+- hosts: worker
+  become: yes 
+  roles: 
+    - role: worker/task2 
+
+- hosts: master
+  become: yes
+  roles: 
+    - role: master/task2     
+
+
+
+
+

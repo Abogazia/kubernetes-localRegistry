@@ -1,0 +1,12 @@
+mirrors:
+            docker-registry:
+              endpoint:
+                - "http://{{ server_hostname }}:5000"
+             "{{ ansible_host }}:5000":
+               endpoint:
+                 - "http://{{ master_ip }}:5000"
+          configs:
+             "{{ master_ip }}:5000":
+              tls:
+                cert_file: /opt/certs/{{ server_hostname }}.crt
+                key_file: /opt/certs/{{ server_hostname }}.key

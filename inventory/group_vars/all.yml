@@ -1,0 +1,40 @@
+---
+ansible_user: k3s
+ansible_sudo_pass: P@ssw0rd@2022
+systemd_dir: /etc/systemd/system
+
+
+
+
+
+server_hostname: master1
+country_name: EG
+city_name: cairo
+organization_name: emu
+email_address: salah@emu-eg.org
+network_sub: 192.168.154.0/24
+mountpoint1: "/opt/certs"
+mountpoint2: "/opt/registry"
+mountpoint_storage: /storage
+permission: u+rwx,g+rwx,o+rwx
+myopts: 'rw,sync,hard'
+owner: nobody
+group: nogroup
+
+
+master_ip: "{{ hostvars[groups['master'][0]]['ansible_host'] | default(groups['master'][0]) }}"
+nfs_ip: "{{ hostvars[groups['nfs'][0]]['ansible_host'] | default(groups['nfs'][0]) }}"
+mynfs1: "{{ nfs_ip }}:/opt/certs"
+mynfs2: "{{ nfs_ip }}:/opt/registry"
+mynfs_storge: "{{ nfs_ip }}:/storage"
+mountpoint1: "/opt/certs"
+mountpoint2: "/opt/registry"
+mountpoint_storage: /storage
+permission: u+rwx,g+rwx,o+rwx
+myopts: 'rw,sync,hard'
+owner: nobody
+group: nogroup
+exports: 
+    - /opt/certs  "{{ network_sub }}"(rw,sync,no_subtree_check,no_root_squash,insecure)
+    - /opt/registry  "{{ network_sub }}"(rw,sync,no_subtree_check,no_root_squash,insecure)
+    - /storage  "{{ network_sub }}"(rw,sync,no_subtree_check,no_root_squash,insecure)
